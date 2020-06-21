@@ -1,0 +1,26 @@
+{
+  "name": "solar-orrery",
+  "version": "0.0.1",
+  "description": "A svg generator to build solar system maps",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Greewi/SolarOrrery.git"
+  },
+  "keywords": [
+    "orrery",
+    "solar",
+    "system",
+    "svg",
+    "generator"
+  ],
+  "author": "Sylvain « Greewi » Dumazet",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/Greewi/SolarOrrery/issues"
+  },
+  "homepage": "https://github.com/Greewi/SolarOrrery#readme"
+}
