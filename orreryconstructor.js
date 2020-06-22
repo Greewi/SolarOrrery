@@ -32,6 +32,9 @@ const OrreryConstructor = class {
 			<desc></desc>
 			<rect id="background" x="-1024" y="-1024" width="2048" height="2048" fill="#000000" />
 			<circle id="sun" cx="0" cy="0" r="5" fill="#FFFFFF" />
+			<circle id="sunglow" cx="0" cy="0" r="10" fill="#FFFFFF" opacity="0.1" />
+			<text x="0" y="-10" style="font-style:normal;font-size:22px;font-family:'Exo 2';fill:#ffffff;fill-opacity:1;stroke:none;" text-anchor="middle" opacity="1">Sol</text>
+			${this.buildScale()}
 			${this.buildOrbits()}
 		</svg>`;
 		return svg;
@@ -70,14 +73,14 @@ const OrreryConstructor = class {
 	 */
 	buildArc(model, start, end, opacity) {
 		let style = this._styleSet.getStyle(model.getName());
-		opacity*=style.opacity;
+		opacity *= style.opacity;
 		let path = '';
 		let x, y = 0;
 		for (let jd = start; jd <= end; jd++) {
 			let position = model.getPosition(jd);
 			let spiralSpread = style.spiral * (style.width);
 			let r = this._scale(position.distance);
-			if(style.spiral>0)
+			if (style.spiral > 0)
 				r += (jd - this._start) * spiralSpread / (this._end - this._start) - spiralSpread;
 			let a = position.angle * Math.PI / 180;
 			x = r * Math.cos(a);
@@ -89,10 +92,27 @@ const OrreryConstructor = class {
 		}
 		if (style.tickWidth > 0)
 			return `<path id="${model.getName()}-${start}-${end}" d="${path}" stroke="${style.color}" stroke-opacity="${opacity}" stroke-width="${style.width}" fill="none" />
-				<circle id="${model.getName()}-body-${end}" cx="${x}" cy="${y}" r="${style.tickWidth*2}" fill="${style.color}" fill-opacity="${opacity*0.2}" />\n
+				<circle id="${model.getName()}-body-${end}" cx="${x}" cy="${y}" r="${style.tickWidth * 2}" fill="${style.color}" fill-opacity="${opacity * 0.2}" />\n
 				<circle id="${model.getName()}-outline-${end}" cx="${x}" cy="${y}" r="${style.tickWidth}" fill="${style.color}" fill-opacity="${opacity}" />\n`;
 		else
 			return `<path id="${model.getName()}-${start}-${end}" d="${path}" stroke="${style.color}" stroke-opacity="${opacity}"  stroke-width="${style.width}" fill="none" />\n`;
+	}
+
+	/**
+	 * Build the distance rings
+	 */
+	buildScale() {
+		let scale = "";
+		for(let i=125; i<=16000; i*=2)
+			scale += this.buildScaleBand(i);
+		return scale;
+	}
+
+	buildScaleBand(distance) {
+		let styleTexte = `font-style:normal;font-size:14px;font-family:'Exo 2';fill:#ffffff;fill-opacity:1;stroke:none;`;
+		let r = this._scale(distance);
+		return `<circle cx="0" cy="0" r="${r}" fill="none" stroke-width="1" stroke="#FFFFFF" stroke-dasharray="5,5" opacity="0.2" />
+		<text x="0" y="${r-3}" style="${styleTexte}" text-anchor="middle" transform="rotate(-90)" opacity="0.5">${distance} sl</text>\n`;
 	}
 
 	/**
@@ -100,17 +120,17 @@ const OrreryConstructor = class {
 	 */
 	buildName(model) {
 		let style = this._styleSet.getStyle(model.getName());
-		if(style.displayName=="")
+		if (style.displayName == "")
 			return "";
 
 		let position = model.getPosition(this._end);
-		
+
 		let styleTexte = `font-style:normal;font-size:22px;font-family:'Exo 2';fill:#ffffff;fill-opacity:1;stroke:none;`;
-		let path='';
-		if(position.angle<180){
+		let path = '';
+		if (position.angle < 180) {
 			// Up is inside
-			for (let angle = position.angle; angle>=position.angle-180; angle--) {
-				let r = this._scale(model.getDistance(angle)) + style.tickWidth*2 + 14
+			for (let angle = position.angle; angle >= position.angle - 180; angle--) {
+				let r = this._scale(model.getDistance(angle)) + style.tickWidth * 2 + 14
 				let a = angle * Math.PI / 180;
 				let x = r * Math.cos(a);
 				let y = r * Math.sin(a);
@@ -122,8 +142,8 @@ const OrreryConstructor = class {
 			return `<path id="${model.getName()}Path" fill="none" stroke="none" d="${path}" /><text style="${styleTexte}"><textPath xlink:href="#${model.getName()}Path">${style.displayName}</textPath></text>`;
 		} else {
 			// Up is outside
-			for (let angle = position.angle-180; angle<=position.angle; angle++) {
-				let r = this._scale(model.getDistance(angle)) + style.tickWidth*2;
+			for (let angle = position.angle - 180; angle <= position.angle; angle++) {
+				let r = this._scale(model.getDistance(angle)) + style.tickWidth * 2;
 				let a = angle * Math.PI / 180;
 				let x = r * Math.cos(a);
 				let y = r * Math.sin(a);
