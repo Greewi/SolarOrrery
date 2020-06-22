@@ -40,6 +40,36 @@ const OrbitalModel = class {
 	}
 
 	/**
+	 * Compute the true anomaly.
+	 * @param {number} meanAnomaly the mean anomaly (in degree)
+	 * @returns {number} the true anomaly (in degree)
+	 */
+	getTrueAnomaly(meanAnomaly) {
+		// From : https://en.wikipedia.org/wiki/True_anomaly#From_the_mean_anomaly
+		let M = meanAnomaly * Math.PI / 180;
+		let e = this._excentricity;
+		let e2 = e * e;
+		let e3 = e2 * e;
+		let m = M
+			 + (2 * e - 1 / 4 * e3) * Math.sin(M)
+			 + 5 / 4 * e2 * Math.sin(M * 2)
+			 + 13 / 12 * e3 * Math.sin(M * 3);
+		return m*180/Math.PI;
+	}
+
+	/**
+	 * Compute the distance from the star for a given longitude
+	 * @param {number} vernalAngle the vernal angle in degree (longitude)
+	 * @returns {number}
+	 */
+	getDistance(vernalAngle) {
+		let trueAnomaly = ((vernalAngle - this._ascendingNode - this._argumentOfPeriapsis+360)%360)*Math.PI/180;
+
+		// From : https://en.wikipedia.org/wiki/True_anomaly#Radius_from_true_anomaly
+		return this._semiMajorAxis * (1 - this._excentricity * this._excentricity) / (1 + this._excentricity * Math.cos(trueAnomaly));
+	}
+
+	/**
 	 * @typedef {Object} PolarPosition
 	 * @property {number} angle - the angle from the vernal axis in degree
 	 * @property {number} distance - the distance from the central body
@@ -54,8 +84,8 @@ const OrbitalModel = class {
 	getPosition(julianDay) {
 		let daysSinceEpoch = julianDay - this._julianEpoch;
 		let meanAnomaly = ((this._meanAnomaly + 360 * daysSinceEpoch / this._orbitalPeriod) % 360);
-		let vernalAngle = (meanAnomaly + this._ascendingNode + this._argumentOfPeriapsis)%360;
-
+		let trueAnomaly = this.getTrueAnomaly(meanAnomaly);
+		let vernalAngle = (trueAnomaly + this._ascendingNode + this._argumentOfPeriapsis)%360;
 		let distance = this.getDistance(vernalAngle);
 
 		return {
@@ -64,27 +94,6 @@ const OrbitalModel = class {
 		};
 	}
 
-	/**
-	 * Compute the distance from the star for a given longitude
-	 * @param {number} vernalAngle the vernal angle in degree (longitude)
-	 * @returns {number}
-	 */
-	getDistance(vernalAngle) {
-		let meanAnomaly = (vernalAngle - this._ascendingNode - this._argumentOfPeriapsis+360)%360;
-
-		// From : https://en.wikipedia.org/wiki/True_anomaly#From_the_mean_anomaly
-		let M = meanAnomaly * Math.PI / 180;
-		let e = this._excentricity;
-		let e2 = e * e;
-		let e3 = e2 * e;
-		let trueAnomaly = M
-			// + (2 * e - 1 / 4 * e3) * Math.sin(M)
-			// + 5 / 4 * e2 * Math.sin(M * 2)
-			// + 13 / 12 * e3 * Math.sin(M * 3);
-
-		// From : https://en.wikipedia.org/wiki/True_anomaly#Radius_from_true_anomaly
-		return this._semiMajorAxis * (1 - this._excentricity * this._excentricity) / (1 + this._excentricity * Math.cos(trueAnomaly));
-	}
 };
 
 /**
