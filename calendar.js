@@ -20,4 +20,18 @@ const dateToJulianDay = (date) => {
 	return a + b - c + d - 32075;
 }
 
+const julianDayToDate = (julianDay) => {
+	// From : https://en.wikipedia.org/wiki/Julian_day
+
+	let f = julianDay + 1401 + Math.trunc(Math.trunc((4*julianDay+274277)/146097)*3/4) - 38;
+	let e = 4*f + 3;
+	let g = Math.trunc((e%1461)/4);
+	let h = 5*g + 2;
+	let day = Math.trunc((h%153)/5)+1
+	let month = (Math.trunc(h/153)+2)%12+1;
+	let year = Math.trunc(e/1461) - 4716 + Math.trunc((14 - month)/12);
+	return `${year}-${month<10?'0'+month:month}-${day<10?'0'+day:day}`;
+}
+
 exports.dateToJulianDay = dateToJulianDay;
+exports.julianDayToDate = julianDayToDate;

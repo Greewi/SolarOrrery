@@ -1,43 +1,46 @@
 const DataSet = require("./dataset").DataSet;
 const StyleSet = require("./styleset").StyleSet;
+const Template = require("./template").Template;
 const OrbitalModel = require("./orbitalmodel").OrbitalModel;
+const calendar = require("./calendar");
 
 const OrreryConstructor = class {
 	/**
 	 * 
 	 * @param {DataSet} dataset
 	 * @param {StyleSet} styleset
+	 * @param {Template} template
 	 * @param {number} start start (Julian Day)
 	 * @param {number} start end (Julian Day)
 	 * @param {function} scaleFunction a function that manage the scale of the map. Receives a radius in parameter and returns the value in pixels
 	 */
-	constructor(dataset, styleset, start, end, scaleFunction) {
+	constructor(dataset, styleset, template, start, end, scaleFunction) {
 		this._dataset = dataset;
 		this._styleSet = styleset;
+		this._template = template;
 		this._start = start;
 		this._end = end;
 		this._scale = scaleFunction;
 	}
 
 	buildSVG() {
-		let svg = `<?xml version="1.0" encoding="utf-8"?>
-		<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
-			width="2048"
-			height="2048"
-			viewBox="-1024 -1024 2048 2048"
-			preserveAspectRatio="xMidYMid meet"
-			xmlns:xlink="http://www.w3.org/1999/xlink"
-		>
-			<title>Solar Orrery</title>
-			<desc></desc>
-			<rect id="background" x="-1024" y="-1024" width="2048" height="2048" fill="#000000" />
-			<circle id="sun" cx="0" cy="0" r="5" fill="#FFFFFF" />
-			<circle id="sunglow" cx="0" cy="0" r="10" fill="#FFFFFF" opacity="0.1" />
-			<text x="0" y="-10" style="font-style:normal;font-size:22px;font-family:'Exo 2';fill:#ffffff;fill-opacity:1;stroke:none;" text-anchor="middle" opacity="1">Sol</text>
-			${this.buildScale()}
-			${this.buildOrbits()}
-		</svg>`;
-		return svg;
+		this._template.setVariable('map', this.buildMap());
+		this._template.setVariable('title', "Carte du système solaire");
+		let slices = 4;
+		for (let m = 0; m <= slices; m++) {
+			let julianDay = Math.round(m * (this._end - this._start) / slices) + this._start;
+			let date = calendar.julianDayToDate(julianDay);
+			this._template.setVariable(`date${m}`, date);
+		}
+		return this._template.generate();
+	}
+
+	buildMap() {
+		return `<circle id="sun" cx="0" cy="0" r="5" fill="#FFFFFF" />
+		<circle id="sunglow" cx="0" cy="0" r="10" fill="#FFFFFF" opacity="0.1" />
+		<text x="0" y="-10" style="font-style:normal;font-size:22px;font-family:'Exo 2';fill:#ffffff;fill-opacity:1;stroke:none;" text-anchor="middle" opacity="1">Sol</text>
+		${this.buildScale()}
+		${this.buildOrbits()}`;
 	}
 
 	buildOrbits() {
@@ -157,8 +160,8 @@ const OrreryConstructor = class {
 	}
 };
 
-const create = (dataset, styleset, start, end, scaleFunction) => {
-	return new OrreryConstructor(dataset, styleset, start, end, scaleFunction);
+const create = (dataset, styleset, template, start, end, scaleFunction) => {
+	return new OrreryConstructor(dataset, styleset, template, start, end, scaleFunction);
 };
 
 exports.create = create;
